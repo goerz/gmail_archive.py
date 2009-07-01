@@ -26,10 +26,11 @@ from optparse import OptionParser
 import libgmail
 from mailbox import mbox, mboxMessage
 from cStringIO import StringIO
+from time import sleep
 
 
 def main(mboxfile, threadsfile=None, labelsfile=None, username=None, 
-         password=None, verbose=False, label=None, delete=False):
+         password=None, verbose=False, label=None, delete=False, delay=0):
     """ Archive Emails from Gmail to an mbox """
 
     if username is None:
@@ -104,6 +105,7 @@ def main(mboxfile, threadsfile=None, labelsfile=None, username=None,
                                    % (thread.id, thread.getLabels()))
                     gmail_ids_in_thread = []
                     for gmail_msg in thread:
+                        sleep(delay)
                         if verbose:
                             print "  ", gmail_msg.id, gmail_msg.number
                         gmail_ids_in_thread.append(str(gmail_msg.id))
@@ -168,6 +170,11 @@ if __name__ == "__main__":
                           dest='label', 
                           help="Label or Folder to archive. If not specified, "
                           "the program will ask for it")
+    arg_parser.add_option('--delay', action='store', type=int, 
+                          dest='delay', 
+                          help="Number of seconds to wait between accessing "
+                          "messages. This may hopefully prevert you being"
+                          "locked out of your account")
     arg_parser.add_option('--verbose', action='store_true', dest='verbose',
                         default=False, help="Print status messages")
     arg_parser.add_option('--delete', action='store_true', 
@@ -189,5 +196,6 @@ if __name__ == "__main__":
         auth_fh.close()
 
     main(mboxfile, options.threadsfile, options.labelsfile, options.username, 
-         options.password, options.verbose, options.label, options.delete)
+         options.password, options.verbose, options.label, options.delete, 
+         options.delay)
     
