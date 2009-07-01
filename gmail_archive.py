@@ -115,8 +115,7 @@ def main(mboxfile, threadsfile=None, labelsfile=None, username=None,
                         mbox_msg.add_header("X-GmailID", 
                                             gmail_msg.id.encode('ascii'))
                         archive_mbox.add(mbox_msg)
-                    threads_fh.write("%s: %s\n" 
-                                   % (thread.id, gmail_ids_in_thread))
+                    threads_fh.write("%s\n" % gmail_ids_in_thread)
                 if delete:
                     for gmail_id in gmail_ids_in_mbox.keys():
                         if gmail_id not in gmail_ids:
