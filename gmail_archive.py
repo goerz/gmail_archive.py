@@ -125,12 +125,12 @@ def main(mboxfile, threadsfile=None, labelsfile=None, username=None,
                         if gmail_ids_in_mbox.has_key(str(gmail_msg.id)):
                             if verbose: print "    skipped"
                             continue # skip messages already in mbox
-                        sleep(delay)
                         mbox_msg = mboxMessage(gmail_msg.source)
                         mbox_msg.add_header("X-GmailID", 
                                             gmail_msg.id.encode('ascii'))
                         archive_mbox.add(mbox_msg)
                     threads_fh.write("%s\n" % gmail_ids_in_thread)
+                    sleep(delay)
                 if delete:
                     for gmail_id in gmail_ids_in_mbox.keys():
                         if gmail_id not in gmail_ids:
