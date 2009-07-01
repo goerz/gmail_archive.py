@@ -31,7 +31,7 @@ from time import sleep
 
 def main(mboxfile, threadsfile=None, labelsfile=None, username=None, 
          password=None, verbose=False, label=None, delete=False, 
-         delay=0, nodownload=False):
+         delay=0, nodownload=False, query = None):
     """ Archive Emails from Gmail to an mbox """
 
     if username is None:
@@ -57,11 +57,12 @@ def main(mboxfile, threadsfile=None, labelsfile=None, username=None,
 
         searches = libgmail.STANDARD_FOLDERS + ga.getLabelNames()
 
-        while label is None:
+        while label is None and query is None:
             print "Select folder or label to archive: (Ctrl-C to exit)"
 
             for optionId, optionName in enumerate(searches):
                 print "  %d. %s" % (optionId, optionName)
+            print "  %d. %s" % (len(searches), "QUERY")
 
             try:
                 label = searches[int(raw_input("Choice: "))]
@@ -70,17 +71,26 @@ def main(mboxfile, threadsfile=None, labelsfile=None, username=None,
                       "number in front of it."
                 raw_input()
                 label = None
+            except IndexError:
+                query = raw_input("Query: ")
             except (KeyboardInterrupt, EOFError):
                 print ""
                 return 1
             print
 
-        if verbose: print "Selected folder: %s" % label
+        if verbose: 
+            if label is not None:
+                print "Selected folder: %s" % label
+            else:
+                print "Selected query: %s" % query
 
-        if label in libgmail.STANDARD_FOLDERS:
-            result = ga.getMessagesByFolder(label, True)
+        if query is None:
+            if label in libgmail.STANDARD_FOLDERS:
+                result = ga.getMessagesByFolder(label, True)
+            else:
+                result = ga.getMessagesByLabel(label, True)
         else:
-            result = ga.getMessagesByLabel(label, True)
+            result = ga.getMessagesByQuery(query, True)
 
         if len(result):
             archive_mbox = mbox(mboxfile)
@@ -138,7 +148,10 @@ def main(mboxfile, threadsfile=None, labelsfile=None, username=None,
                 labels_fh.close()
                 archive_mbox.close()
         else:
-            print "No threads found in `%s`." % label
+            if label is not None:
+                print "No threads found in `%s`." % label
+            else:
+                print "No threads found in query `%s`." % query
 
     if verbose: print "\n\nDone."
     
@@ -173,6 +186,12 @@ if __name__ == "__main__":
                           dest='label', 
                           help="Label or Folder to archive. If not specified, "
                           "the program will ask for it")
+    arg_parser.add_option('--query', action='store', type=str, 
+                          dest='query', 
+                          help="Search to archive. This is an alternative to"
+                          "specifying a --label. Only the messages that match"
+                          "the search are archived. The --lable option takes "
+                          "preference over --query")
     arg_parser.add_option('--delay', action='store', type=int, 
                           dest='delay', default=0,
                           help="Number of seconds to wait between accessing "
@@ -205,5 +224,4 @@ if __name__ == "__main__":
 
     main(mboxfile, options.threadsfile, options.labelsfile, options.username, 
          options.password, options.verbose, options.label, options.delete, 
-         options.delay, options.nodownload)
-    
+         options.delay, options.nodownload, options.query)
