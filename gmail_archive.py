@@ -104,7 +104,6 @@ def main(mboxfile, threadsfile=None, labelsfile=None, username=None,
                                    % (thread.id, thread.getLabels()))
                     gmail_ids_in_thread = []
                     for gmail_msg in thread:
-                        sleep(delay)
                         if verbose:
                             print "  ", gmail_msg.id, gmail_msg.number
                         gmail_ids_in_thread.append(str(gmail_msg.id))
@@ -112,6 +111,7 @@ def main(mboxfile, threadsfile=None, labelsfile=None, username=None,
                         if gmail_ids_in_mbox.has_key(str(gmail_msg.id)):
                             if verbose: print "    skipped"
                             continue # skip messages already in mbox
+                        sleep(delay)
                         mbox_msg = mboxMessage(gmail_msg.source)
                         mbox_msg.add_header("X-GmailID", 
                                             gmail_msg.id.encode('ascii'))
@@ -170,7 +170,7 @@ if __name__ == "__main__":
                           help="Label or Folder to archive. If not specified, "
                           "the program will ask for it")
     arg_parser.add_option('--delay', action='store', type=int, 
-                          dest='delay', 
+                          dest='delay', default=0,
                           help="Number of seconds to wait between accessing "
                           "messages. This may hopefully prevert you being"
                           "locked out of your account")
