@@ -30,7 +30,8 @@ from time import sleep
 
 
 def main(mboxfile, threadsfile=None, labelsfile=None, username=None, 
-         password=None, verbose=False, label=None, delete=False, delay=0):
+         password=None, verbose=False, label=None, delete=False, 
+         delay=0, nodownload=False):
     """ Archive Emails from Gmail to an mbox """
 
     if username is None:
@@ -108,6 +109,9 @@ def main(mboxfile, threadsfile=None, labelsfile=None, username=None,
                             print "  ", gmail_msg.id, gmail_msg.number
                         gmail_ids_in_thread.append(str(gmail_msg.id))
                         gmail_ids.append(str(gmail_msg.id))
+                        if nodownload:
+                            if verbose: print "    skipped (no download)"
+                            continue
                         if gmail_ids_in_mbox.has_key(str(gmail_msg.id)):
                             if verbose: print "    skipped"
                             continue # skip messages already in mbox
@@ -175,11 +179,16 @@ if __name__ == "__main__":
                           "messages. This may hopefully prevert you being"
                           "locked out of your account")
     arg_parser.add_option('--verbose', action='store_true', dest='verbose',
-                        default=False, help="Print status messages")
+                          default=False, help="Print status messages")
     arg_parser.add_option('--delete', action='store_true', 
                           dest='delete',
-                        default=False, help="Delete archived emails that "
-                        "are no longer on the server")
+                          default=False, help="Delete archived emails that "
+                          "are no longer on the server")
+    arg_parser.add_option('--nodownload', action='store_true', 
+                          dest='nodownload',
+                          default=False, help="Do not store any messages in "
+                          "the mbox (behave like if the message was already "
+                          "present there).")
     options, args = arg_parser.parse_args(sys.argv)
 
     try:
@@ -196,5 +205,5 @@ if __name__ == "__main__":
 
     main(mboxfile, options.threadsfile, options.labelsfile, options.username, 
          options.password, options.verbose, options.label, options.delete, 
-         options.delay)
+         options.delay, options.nodownload)
     
