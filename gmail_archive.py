@@ -58,7 +58,6 @@ def main(mboxfile, threadsfile=None, labelsfile=None, username=None,
 
         while label is None:
             print "Select folder or label to archive: (Ctrl-C to exit)"
-            print "Note: *All* pages of results will be archived."
 
             for optionId, optionName in enumerate(searches):
                 print "  %d. %s" % (optionId, optionName)
