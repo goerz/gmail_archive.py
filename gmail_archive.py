@@ -31,7 +31,8 @@ from time import sleep
 
 def main(mboxfile, threadsfile=None, labelsfile=None, username=None, 
          password=None, verbose=False, label=None, delete=False, 
-         delay=0, nodownload=False, query = None):
+         msg_delay=0, thread_delay=0, skip_thread_delay = 0, 
+         nodownload=False, query = None):
     """ Archive Emails from Gmail to an mbox """
 
     if username is None:
@@ -107,13 +108,14 @@ def main(mboxfile, threadsfile=None, labelsfile=None, username=None,
                 threads_fh = open(threadsfile, "w")
             gmail_ids = []
             try:
-                for thread in result:
+                for i, thread in enumerate(result):
                     if verbose: 
                         print "\nThread ID: ", thread.id, " LEN ", \
-                              len(thread), " S: ", thread.subject
+                              len(thread)
                     labels_fh.write("%s: %s\n" 
                                    % (thread.id, thread.getLabels()))
                     gmail_ids_in_thread = []
+                    local_thread_delay = thread_delay
                     for gmail_msg in thread:
                         if verbose:
                             print "  ", gmail_msg.id, gmail_msg.number
@@ -121,16 +123,19 @@ def main(mboxfile, threadsfile=None, labelsfile=None, username=None,
                         gmail_ids.append(str(gmail_msg.id))
                         if nodownload:
                             if verbose: print "    skipped (no download)"
+                            local_thread_delay = skip_thread_delay
                             continue
                         if gmail_ids_in_mbox.has_key(str(gmail_msg.id)):
                             if verbose: print "    skipped"
+                            local_thread_delay = skip_thread_delay
                             continue # skip messages already in mbox
                         mbox_msg = mboxMessage(gmail_msg.source)
                         mbox_msg.add_header("X-GmailID", 
                                             gmail_msg.id.encode('ascii'))
                         archive_mbox.add(mbox_msg)
+                        sleep(msg_delay)
                     threads_fh.write("%s\n" % gmail_ids_in_thread)
-                    sleep(delay)
+                    sleep(local_thread_delay)
                 if delete:
                     for gmail_id in gmail_ids_in_mbox.keys():
                         if gmail_id not in gmail_ids:
@@ -192,11 +197,20 @@ if __name__ == "__main__":
                           "specifying a --label. Only the messages that match"
                           "the search are archived. The --lable option takes "
                           "preference over --query")
-    arg_parser.add_option('--delay', action='store', type=int, 
-                          dest='delay', default=0,
+    arg_parser.add_option('--msg_delay', action='store', type=int, 
+                          dest='msg_delay', default=0,
                           help="Number of seconds to wait between accessing "
-                          "messages. This may hopefully prevert you being"
-                          "locked out of your account")
+                          "messages. This and the following delays may "
+                          "hopefully prevent you being locked out of your "
+                          "account")
+    arg_parser.add_option('--thread_delay', action='store', type=int, 
+                          dest='thread_delay', default=0,
+                          help="Number of seconds to wait between accessing "
+                          "threads.")
+    arg_parser.add_option('--skip_thread_delay', action='store', type=int, 
+                          dest='skip_thread_delay', default=0,
+                          help="Number of seconds to wait between accessing "
+                          "threads that are not downloaded")
     arg_parser.add_option('--verbose', action='store_true', dest='verbose',
                           default=False, help="Print status messages")
     arg_parser.add_option('--delete', action='store_true', 
@@ -224,4 +238,5 @@ if __name__ == "__main__":
 
     main(mboxfile, options.threadsfile, options.labelsfile, options.username, 
          options.password, options.verbose, options.label, options.delete, 
-         options.delay, options.nodownload, options.query)
+         options.msg_delay, options.thread_delay, options.skip_thread_delay, 
+         options.nodownload, options.query)
